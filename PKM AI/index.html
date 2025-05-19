@@ -1,40 +1,115 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Form | Sample</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistem Pakar Narkoba</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="bg-gray-100 font-sans">
+  <div class="max-w-2xl mx-auto py-10 px-6">
+    <h1 class="text-3xl font-bold text-center text-red-600 mb-4">Sistem Pakar Deteksi Pengguna Narkoba</h1>
+    <p class="text-center text-gray-700 mb-8">Jawab pertanyaan di bawah ini untuk membantu sistem menentukan klasifikasi risiko penggunaan narkoba.</p>
 
-<body>
-    <div class="wrapper">
-        <h1 id="headline">Log in to connect</h1>
-        <div class="input-data">
-            <input class="form__input" type="text" id="email" autocomplete="off" placeholder=" " required>
-            <label class="form__label" for="email">Email</label>
-        </div>
-        <div class="input-data">
-            <input class="form__input" type="text" id="password" autocomplete="off" placeholder=" " required>
-            <label class="form__label" for="password">Password</label>
-        </div>
-        <button class="logbut">Log in</button>
-        <div class="otheroption">
-            <img src="img/google.png" alt="" id="google">
-            <img src="img/facebook.png" alt="" id="facebook">
-        </div>
-        <p class="bottom__lines">
-            Don't have an account <a class="link__one" href="javascript:toggleform()">register here</a>
-            <br>
-            By Logging in you accept our <a class="link__two" href="#YOUR_TERMS">terms of use</a>
-            <br>
-        </p>
-        <h3 class="sec__text">
-            A simple dark form template created by Shaad & Shubham and hosted by arpit456jain.
-        </h3>
+    <form id="expertForm" class="bg-white shadow-md rounded-2xl p-6 space-y-6">
+      <div>
+        <p class="font-semibold mb-2">Seberapa sering peserta mengalami perubahan perilaku secara tiba-tiba?</p>
+        <select name="perilaku" class="w-full border rounded p-2">
+          <option value="0">Tidak Pernah</option>
+          <option value="0.3">Jarang</option>
+          <option value="0.6">Sering</option>
+          <option value="0.9">Sangat Sering</option>
+        </select>
+      </div>
+
+      <div>
+        <p class="font-semibold mb-2">Seberapa sering peserta terlihat memiliki mata merah atau sayu?</p>
+        <select name="mata" class="w-full border rounded p-2">
+          <option value="0">Tidak Pernah</option>
+          <option value="0.3">Jarang</option>
+          <option value="0.6">Sering</option>
+          <option value="0.9">Sangat Sering</option>
+        </select>
+      </div>
+
+      <div>
+        <p class="font-semibold mb-2">Seberapa sering peserta menarik diri dari keluarga atau teman?</p>
+        <select name="sosial" class="w-full border rounded p-2">
+          <option value="0">Tidak Pernah</option>
+          <option value="0.3">Jarang</option>
+          <option value="0.6">Sering</option>
+          <option value="0.9">Sangat Sering</option>
+        </select>
+      </div>
+
+      <button type="submit" class="w-full bg-red-600 text-white py-2 px-4 rounded-xl hover:bg-red-700 transition">Lihat Hasil</button>
+    </form>
+
+    <div id="result" class="mt-8 hidden">
+      <div class="bg-white p-6 rounded-2xl shadow-lg">
+        <h2 class="text-xl font-semibold mb-2 text-red-600">Hasil Klasifikasi</h2>
+        <p id="diagnosis" class="text-gray-700 mb-4"></p>
+        <textarea id="excelOutput" class="w-full p-2 border rounded" rows="3" readonly></textarea>
+        <button onclick="downloadExcel()" class="mt-4 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">Download Excel</button>
+      </div>
     </div>
-</body>
+  </div>
 
+  <script>
+    const basisPengetahuan = {
+      perilaku: 0.7,
+      mata: 0.6,
+      sosial: 0.8
+    };
+
+    let lastExcelData = ""; // Untuk menyimpan data terakhir
+
+    document.getElementById('expertForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const perilaku = parseFloat(document.querySelector('select[name="perilaku"]').value);
+      const mata = parseFloat(document.querySelector('select[name="mata"]').value);
+      const sosial = parseFloat(document.querySelector('select[name="sosial"]').value);
+
+      let CF = 0;
+      if (perilaku > 0) CF = perilaku * basisPengetahuan.perilaku;
+      if (mata > 0) CF = CF + (mata * basisPengetahuan.mata) * (1 - CF);
+      if (sosial > 0) CF = CF + (sosial * basisPengetahuan.sosial) * (1 - CF);
+
+      let hasil = "", tingkat = "";
+      if (CF >= 0.8) {
+        tingkat = "Sangat Tinggi";
+        hasil = `Tingkat keyakinan sangat tinggi (${(CF * 100).toFixed(1)}%). Peserta berisiko tinggi sebagai pengguna narkoba.`;
+      } else if (CF >= 0.5) {
+        tingkat = "Sedang";
+        hasil = `Tingkat keyakinan sedang (${(CF * 100).toFixed(1)}%). Ada indikasi risiko pengguna narkoba.`;
+      } else if (CF > 0) {
+        tingkat = "Rendah";
+        hasil = `Tingkat keyakinan rendah (${(CF * 100).toFixed(1)}%). Indikasi penggunaan narkoba masih lemah.`;
+      } else {
+        tingkat = "Tidak Ada";
+        hasil = "Tidak ada indikasi kuat peserta merupakan pengguna narkoba.";
+      }
+
+      const excelFormat = `Perilaku,Mata,Sosial,CF,Tingkat\n${perilaku},${mata},${sosial},${(CF * 100).toFixed(1)}%,${tingkat}`;
+
+      lastExcelData = excelFormat;
+
+      document.getElementById('diagnosis').textContent = hasil;
+      document.getElementById('excelOutput').value = excelFormat;
+      document.getElementById('result').classList.remove('hidden');
+    });
+
+    function downloadExcel() {
+      const blob = new Blob([lastExcelData], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'hasil_diagnosis.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  </script>
+</body>
 </html>
